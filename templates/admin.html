@@ -1,0 +1,78 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>لوحة تحكم BENSAOULA</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #10131c;
+            color: white;
+            padding: 20px;
+        }
+        h1 { color: #c49b50; }
+        .request {
+            background: #1c2230;
+            padding: 18px;
+            margin: 15px 0;
+            border-radius: 10px;
+        }
+        select, button {
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 6px;
+        }
+        button {
+            background: #c49b50;
+            border: none;
+            cursor: pointer;
+        }
+        .logout { margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+
+<h1>لوحة تحكم BENSAOULA</h1>
+<p>إدارة طلبات العملاء</p>
+
+<form method="POST" action="{{ url_for('admin_logout') }}">
+    <input type="hidden" name="csrf_token"
+           value="{{ csrf_token() }}">
+    <button class="logout">تسجيل الخروج</button>
+</form>
+
+{% for item in requests_list %}
+<div class="request">
+    <h3>طلب رقم: {{ item['id'] }}</h3>
+    <p>الاسم: {{ item['name'] }}</p>
+    <p>الهاتف: {{ item['phone'] }}</p>
+    <p>البريد: {{ item['email'] }}</p>
+    <p>نوع الطلب: {{ item['request_type'] }}</p>
+    <p>الميزانية: {{ item['budget'] }}</p>
+    <p>التفاصيل: {{ item['details'] }}</p>
+    <p>الحالة: {{ item['status'] }}</p>
+
+    <form method="POST"
+          action="{{ url_for('update_request', request_id=item['id']) }}">
+
+        <input type="hidden" name="csrf_token"
+               value="{{ csrf_token() }}">
+
+        <select name="status">
+            <option value="new">جديد</option>
+            <option value="processing">قيد المعالجة</option>
+            <option value="completed">مكتمل</option>
+        </select>
+
+        <button type="submit">تحديث الحالة</button>
+    </form>
+</div>
+{% else %}
+<p>لا توجد طلبات حالياً.</p>
+{% endfor %}
+
+</body>
+</html>
+

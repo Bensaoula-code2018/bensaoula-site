@@ -1,0 +1,10 @@
+backup/
+*.pyc
+.env
+.venv/
+venv/
+data/
+instance/
+*.db
+*.sqlite3
+setup_admin.py
