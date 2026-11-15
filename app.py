@@ -22,23 +22,28 @@ INSTANCE_DIR.mkdir(exist_ok=True)
 CONFIG_FILE = INSTANCE_DIR / "config.json"
 DB_FILE = DATA_DIR / "database.db"
 
-if not CONFIG_FILE.exists():
-    raise RuntimeError(
-        "Configuration missing. Run: python setup_admin.py"
-    )
+secret_key = os.environ.get("SECRET_KEY")
+admin_password_hash = os.environ.get("ADMIN_PASSWORD_HASH")
 
-with open(CONFIG_FILE, encoding="utf-8") as file:
-    config = json.load(file)
+if CONFIG_FILE.exists():
+    with open(CONFIG_FILE, encoding="utf-8") as file:
+        config = json.load(file)
+
+    secret_key = secret_key or config.get("secret_key")
+    admin_password_hash = admin_password_hash or config.get("password_hash")
+
+if not secret_key or not admin_password_hash:
+    raise RuntimeError("Missing application configuration")
 
 app = Flask(
     __name__,
     static_folder=str(BASE_DIR),
     static_url_path=""
 )
-app.secret_key = config["secret_key"]
 
+app.secret_key = secret_key
+ADMIN_PASSWORD_HASH = admin_password_hash
 app.config["MAX_CONTENT_LENGTH"] = 16 * 1024
-
 def get_db():
     db = sqlite3.connect(DB_FILE)
     db.row_factory = sqlite3.Row
@@ -133,7 +138,7 @@ def admin_login():
 
         password = request.form.get("password", "")
 
-        if check_password_hash(config["password_hash"], password):
+        if check_password_hash(ADMIN_PASSWORD_HASH, password):
             session.clear()
             session["admin_logged_in"] = True
             csrf_token()
@@ -143,6 +148,7 @@ def admin_login():
 
     return render_template("login.html", error=error)
 
+
 @app.route("/admin/logout", methods=["POST"])
 @login_required
 def admin_logout():
@@ -151,6 +157,7 @@ def admin_logout():
 
     session.clear()
     return redirect(url_for("admin_login"))
+
 
 @app.route("/admin")
 @login_required
